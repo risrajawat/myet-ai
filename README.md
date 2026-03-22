@@ -1,36 +1,193 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 MyET AI – AI-Native News Experience
 
-## Getting Started
+### 🏆 ET GenAI Hackathon 2026
 
-First, run the development server:
+**Problem Statement:** AI-Native News Experience
+
+---
+
+## 📖 About the Project
+
+**MyET AI** is an AI-powered platform that transforms how users consume news.
+Instead of reading multiple static articles, users get a **personalized, interactive, and intelligent news experience** powered by AI.
+
+The goal is to make news:
+
+* Easier to understand
+* Faster to consume
+* More engaging and interactive
+
+---
+
+## 🎯 Problem We Are Solving
+
+* News is **generic and one-size-fits-all**
+* Users read multiple articles to understand one topic
+* No **interaction or personalization**
+* Complex topics are hard to understand
+* Language barriers for Indian users
+
+---
+
+## 💡 Our Solution
+
+MyET AI uses an **AI-driven multi-step system** to improve news consumption:
+
+1. **Personalized Feed** – News based on user interests
+2. **AI Briefings** – Summarized + structured insights
+3. **Chat with News** – Ask questions and get explanations
+4. **Story Timeline** – Track how news evolves
+5. **Video Generation** – Convert news into short explanations
+6. **Language Support** – Read news in regional languages
+
+---
+
+## 🤖 AI Architecture (Agent-Based)
+
+We designed the system as modular AI components:
+
+* **News Fetch Agent** – Retrieves articles from APIs
+* **Context Aggregation (Lite RAG)** – Combines multiple sources
+* **Summarizer Agent** – Generates structured summaries
+* **Personalization Agent** – Filters content
+* **Chat Agent** – Handles Q&A
+* **Timeline Agent** – Builds story flow
+* **Translation Agent** – Language support
+* **Video Agent** – Generates script-based visuals
+
+---
+
+## 🔄 System Workflow
+
+1. User selects interests
+2. System fetches multiple articles
+3. Articles are combined (Lite RAG approach)
+4. AI processes and generates insights
+5. Output includes:
+
+   * Summary
+   * Chat
+   * Timeline
+   * Translated content
+
+---
+
+## 🔥 Current Status (MVP)
+
+✅ UI + core flow built
+✅ AI summary working
+🔜 Next:
+
+* Chat feature
+* Timeline generation
+* Video generation
+
+---
+
+## 🛠️ Tech Stack
+
+| Component      | Tech Used                        |
+| -------------- | -------------------------------- |
+| Frontend       | Next.js, Tailwind CSS            |
+| Backend/API    | Next.js API Routes               |
+| AI Integration | Groq API                         |
+| Data Source    | NewsAPI                          |
+| Logic Layer    | Lite RAG (multi-article context) |
+| Hosting        | Vercel (optional)                |
+
+---
+
+<!-- ## 🔗 Demo
+
+(Add your demo video / deployed link here) -->
+
+---
+
+## 📂 Project Structure
+
+```
+/app
+├── page.tsx                 # Home / dashboard
+├── article/[id]/page.tsx    # Article detail page
+├── api/
+│   └── chat/route.ts        # Chat API
+
+/lib
+├── agents/
+│   ├── index.ts             # Agent entry
+│   ├── ai.ts                # AI logic
+│   ├── xai.ts               # Explainability / reasoning
+│   ├── mock-data.ts         # Mock data
+│   └── utils.ts             # Helper functions
+
+/public                      # Static assets
+
+# Config files
+.env.local
+next.config.ts
+package.json
+tsconfig.json
+
+```
+
+---
+
+## 📌 Roadmap
+
+* [x] Build UI + News Feed
+* [x] AI Summary Integration
+* [x] Chat with News
+* [x] Timeline Feature
+* [ ] Video Generation
+* [ ] Language Support
+* [ ] Full RAG Pipeline (Future)
+
+---
+
+## 🎯 Why MyET AI Stands Out
+
+* **Agent-based system design (not just chatbot)**
+* **Combines multiple articles for better understanding**
+* **Interactive + personalized news experience**
+* **Scalable to enterprise-level AI system**
+
+---
+
+## 🚀 How to Run Locally
+
+### 1️⃣ Clone Repo
+
+```bash
+git clone https://github.com/your-username/myet-ai.git
+cd myet-ai
+```
+
+### 2️⃣ Install Dependencies
+
+```bash
+npm install
+```
+
+### 3️⃣ Setup Environment Variables
+
+Create `.env.local`:
+
+```bash
+NEXT_PUBLIC_NEWS_API_KEY=your_key
+GROQ_API_KEY=your_key
+```
+
+### 4️⃣ Run Project
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 👨‍💻 Developer
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Built by **Rishabh Singh**
+(ET GenAI Hackathon Participant)
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
