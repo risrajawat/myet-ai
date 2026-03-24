@@ -20,6 +20,49 @@ export default function Home() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+  const [userProfile, setUserProfile] = useState<{name: string, email: string} | null>(null);
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+
+  // Load saved preferences on initial mount
+  useEffect(() => {
+    setIsMounted(true);
+    const savedPrefs = localStorage.getItem('myet-preferences');
+    const savedProfile = localStorage.getItem('myet-profile');
+    
+    if (savedProfile && savedPrefs) {
+      try {
+        setUserProfile(JSON.parse(savedProfile));
+        setSelectedTopics(JSON.parse(savedPrefs));
+        setIsOnboarding(false);
+      } catch (e) {
+        setIsOnboarding(true);
+      }
+    } else {
+      setIsOnboarding(true);
+    }
+  }, []);
+
+  // Save preferences whenever they change
+  useEffect(() => {
+    if (isMounted && !isOnboarding) {
+      localStorage.setItem('myet-preferences', JSON.stringify(selectedTopics));
+    }
+  }, [selectedTopics, isMounted, isOnboarding]);
+
+  const handleOnboardSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || selectedTopics.length === 0) return;
+    
+    const profile = { name, email };
+    setUserProfile(profile);
+    localStorage.setItem('myet-profile', JSON.stringify(profile));
+    localStorage.setItem('myet-preferences', JSON.stringify(selectedTopics));
+    setIsOnboarding(false);
+  };
 
   // Fetch articles based on personalization
   useEffect(() => {
@@ -44,52 +87,117 @@ export default function Home() {
     );
   };
 
+  if (!isMounted) return null;
+
+  if (isOnboarding) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[85vh] px-4 w-full h-full relative">
+        <motion.div initial={{opacity:0, scale:0.95}} animate={{opacity:1, scale:1}} className="glass rounded-3xl p-8 md:p-10 max-w-xl w-full border border-white/10 shadow-2xl relative overflow-hidden z-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/20 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <h1 className="text-3xl font-bold mb-2 text-white">Welcome to MyET AI</h1>
+          <p className="text-gray-400 text-sm mb-8">Create your profile and start your interactive news journey.</p>
+          
+          <form onSubmit={handleOnboardSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Full Name</label>
+                <input required type="text" value={name} onChange={e=>setName(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 transition-all placeholder:text-gray-600" placeholder="Rishabh Singh" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">Email Address</label>
+                <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 transition-all placeholder:text-gray-600" placeholder="rishabh@example.com" />
+              </div>
+            </div>
+
+            <div className="pt-6 mt-6 border-t border-white/5">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center justify-between">
+                Select Your Interests
+                {selectedTopics.length === 0 && <span className="text-brand-500 animate-pulse">Select at least 1</span>}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {TOPICS.map(topic => {
+                  const Icon = topic.icon;
+                  const isSelected = selectedTopics.includes(topic.id);
+                  return (
+                    <button type="button" key={topic.id} onClick={() => toggleTopic(topic.id)} className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all ${isSelected ? 'bg-brand-500/20 border-brand-500 text-brand-500 shadow-[0_0_10px_rgba(255,51,102,0.2)]' : 'bg-transparent border-white/10 text-gray-400 hover:text-white glass-hover'}`}>
+                       <Icon size={12} className={`inline mr-2 ${isSelected ? 'text-brand-500' : 'text-gray-500'}`} />{topic.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <button type="submit" disabled={!name || !email || selectedTopics.length === 0} className="w-full py-4 mt-8 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:hover:bg-brand-500 text-white font-bold rounded-xl transition flex justify-center items-center gap-2 group shadow-lg shadow-brand-500/25">
+              Build My Newsroom <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-10">
       {/* Header section */}
-      <section className="flex flex-col gap-4">
-        <motion.h1 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-5xl font-bold tracking-tight"
-        >
-          Your Personalized <span className="text-brand-500">Newsroom</span>
-        </motion.h1>
-        <motion.p 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-gray-400 text-lg max-w-2xl"
-        >
-          Select topics that matter to you. Our Personalization Agent will curate the most impactful stories tailored to your interests.
-        </motion.p>
-        
-        {/* Interests Selector */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-wrap gap-3 mt-4"
-        >
-          {TOPICS.map((topic) => {
-            const isSelected = selectedTopics.includes(topic.id);
-            const Icon = topic.icon;
-            return (
-              <button
-                key={topic.id}
-                onClick={() => toggleTopic(topic.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${
-                  isSelected 
-                    ? 'border-brand-500 bg-brand-500/10 text-brand-500 shadow-[0_0_10px_rgba(255,51,102,0.2)]'
-                    : 'border-border glass glass-hover text-gray-300'
-                }`}
-              >
-                <Icon size={16} className={isSelected ? "text-brand-500" : "text-gray-400"} />
-                {topic.label}
-              </button>
-            );
-          })}
-        </motion.div>
+      <section className="flex flex-col gap-4 relative">
+        <div className="flex justify-between items-start">
+          <motion.h1 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-5xl font-bold tracking-tight"
+          >
+            {userProfile ? `Welcome back, ${userProfile.name.split(' ')[0]}` : 'Your Personalized'}<br/>
+            <span className="text-brand-500">Newsroom</span>
+          </motion.h1>
+          
+          {userProfile && (
+            <button 
+              onClick={() => { localStorage.clear(); window.location.reload(); }}
+              className="text-xs text-gray-400 hover:text-white transition-colors px-4 py-2 border border-white/10 glass rounded-full hover:bg-white/5 active:scale-95 flex items-center gap-2"
+            >
+              Logout
+            </button>
+          )}
+        </div>
+        {!userProfile && (
+          <>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-gray-400 text-lg max-w-2xl"
+            >
+              Select topics that matter to you. Our Personalization Agent will curate the most impactful stories tailored to your interests.
+            </motion.p>
+            
+            {/* Interests Selector */}
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-wrap gap-3 mt-4"
+            >
+              {TOPICS.map((topic) => {
+                const isSelected = selectedTopics.includes(topic.id);
+                const Icon = topic.icon;
+                return (
+                  <button
+                    key={topic.id}
+                    onClick={() => toggleTopic(topic.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${
+                      isSelected 
+                        ? 'border-brand-500 bg-brand-500/10 text-brand-500 shadow-[0_0_10px_rgba(255,51,102,0.2)]'
+                        : 'border-border glass glass-hover text-gray-300'
+                    }`}
+                  >
+                    <Icon size={16} className={isSelected ? "text-brand-500" : "text-gray-400"} />
+                    {topic.label}
+                  </button>
+                );
+              })}
+            </motion.div>
+          </>
+        )}
       </section>
 
       {/* Feed Section */}

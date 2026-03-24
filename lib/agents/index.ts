@@ -11,8 +11,55 @@ const hasGroqKey = !!process.env.GROQ_API_KEY;
 
 // 1. Personalization Agent
 export async function getPersonalizedNews(interests: string[]): Promise<NewsArticle[]> {
-  await delay(800);
   if (!interests || interests.length === 0) return mockArticles;
+
+  if (hasGroqKey) {
+    try {
+      // Create a lightweight map of available articles to send to the AI
+      const catalog = mockArticles.map(a => ({ id: a.id, title: a.title, summary: a.summary }));
+      
+      const { text } = await generateText({
+        model: primaryModel,
+        prompt: `You are an AI Personalization Engine curating news for a user interested in: [${interests.join(', ')}].
+        Here is the current news catalog:
+        ${JSON.stringify(catalog, null, 2)}
+        
+        Analyze the summaries and rank the articles based on semantic relevance to the user's interests. Return ONLY the IDs of the top relevant articles (max 6).
+        Return STRICTLY valid JSON ONLY. Do not use markdown backticks. The JSON must exactly match this structure:
+        {
+          "ranked_ids": ["id-1", "id-2", "id-3"]
+        }`
+      });
+
+      let rankedIds: string[] = [];
+      try {
+        const match = text.match(/\{[\s\S]*\}/);
+        if (match) {
+          const parsed = JSON.parse(match[0]);
+          if (parsed.ranked_ids) rankedIds = Array.isArray(parsed.ranked_ids) ? parsed.ranked_ids : [];
+        }
+      } catch (parseError) {
+        // Ultimate fallback: Extract any values inside brackets if JSON is corrupt
+        const arrayMatch = text.match(/\[([\s\S]*?)\]/);
+        if (arrayMatch) {
+          rankedIds = arrayMatch[1].split(',').map(s => s.replace(/["'\s]/g, '')).filter(Boolean);
+        } else {
+          throw parseError; // Only throw if both methods fail
+        }
+      }
+      
+      if (rankedIds.length > 0) {
+        // Return articles in the exact order the AI specified
+        const ranked = rankedIds.map(id => mockArticles.find(a => a.id === id)).filter(Boolean) as NewsArticle[];
+        if (ranked.length > 0) return ranked;
+      }
+    } catch (e) {
+      console.error("Groq Personalization Error, falling back to tag match:", e);
+    }
+  }
+
+  // Fallback if no Groq key or AI fail
+  await delay(800);
   return mockArticles.filter(article => 
     article.tags.some(tag => interests.map(i => i.toLowerCase()).includes(tag.toLowerCase()))
   );
@@ -37,8 +84,9 @@ export async function generateBriefing(articleContent: string) {
          ${articleContent}`
        });
        
-       const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-       return JSON.parse(cleanJson);
+       const match = text.match(/\{[\s\S]*\}/);
+       if (!match) throw new Error("Failed to extract JSON from response");
+       return JSON.parse(match[0]);
      } catch (e) {
        console.error("Groq Briefing Error, falling back to mock:", e);
      }
@@ -80,8 +128,9 @@ export async function generateStoryArc(articleContent: string) {
          ${articleContent}`
        });
        
-       const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-       return JSON.parse(cleanJson).timeline;
+       const match = text.match(/\{[\s\S]*\}/);
+       if (!match) throw new Error("Failed to extract JSON from response");
+       return JSON.parse(match[0]).timeline;
      } catch (e) {
        console.error("Groq Timeline Error, falling back to mock:", e);
      }
@@ -116,8 +165,9 @@ export async function generateVideoScript(articleContent: string) {
          ${articleContent}`
        });
        
-       const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-       return JSON.parse(cleanJson);
+       const match = text.match(/\{[\s\S]*\}/);
+       if (!match) throw new Error("Failed to extract JSON from response");
+       return JSON.parse(match[0]);
      } catch (e) {
        console.error("Groq Video Script Error, fallback:", e);
      }
