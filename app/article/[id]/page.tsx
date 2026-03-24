@@ -97,11 +97,11 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
     setLoadingStates(p => ({ ...p, videoScript: false }));
   };
 
-  const translateBriefing = async () => {
+  const translateBriefing = async (targetLanguage: string) => {
     if (!briefing || loadingStates.translating) return;
     setLoadingStates(p => ({ ...p, translating: true }));
     try {
-      const translatedSummary = await translateText(briefing.summary, "Hindi");
+      const translatedSummary = await translateText(briefing.summary, targetLanguage);
       setBriefing({ ...briefing, summary: translatedSummary });
     } catch (e) { console.error(e); }
     setLoadingStates(p => ({ ...p, translating: false }));
@@ -258,13 +258,24 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
                   <div className="flex items-center gap-2 text-brand-500 font-bold uppercase tracking-widest text-xs">
                     <Zap size={14} className="fill-current" /> AI Executive Summary
                   </div>
-                  <button 
-                    onClick={translateBriefing}
-                    className="flex items-center gap-2 px-3 py-1.5 glass rounded-full text-xs font-medium hover:bg-white/10 transition border border-border/50 group"
-                  >
-                    {loadingStates.translating ? <Loader2 size={12} className="animate-spin" /> : <Languages size={14} className="group-hover:text-brand-500 transition-colors" />}
-                    Translate to Hindi
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {loadingStates.translating && <Loader2 size={14} className="animate-spin text-brand-500 mr-1" />}
+                    <div className="flex items-center bg-black/40 border border-white/10 rounded-full p-1 h-8 shadow-inner">
+                      <span className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold uppercase tracking-wider px-2 border-r border-white/10">
+                        <Languages size={12} /> Translate
+                      </span>
+                      {['Hindi', 'Tamil', 'Telugu', 'Bengali'].map(lang => (
+                        <button 
+                          key={lang}
+                          onClick={() => translateBriefing(lang)}
+                          disabled={loadingStates.translating}
+                          className="px-3 text-[11px] font-semibold text-gray-300 hover:text-brand-400 hover:bg-brand-500/10 rounded-full h-full transition disabled:opacity-50"
+                        >
+                          {lang}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {loadingStates.briefing ? (

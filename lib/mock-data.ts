@@ -1,3 +1,5 @@
+import { combinedBudgetContext } from './budget-data';
+
 export interface NewsArticle {
   id: string;
   title: string;
@@ -10,6 +12,16 @@ export interface NewsArticle {
 }
 
 export const mockArticles: NewsArticle[] = [
+  {
+    id: "budget-1",
+    title: "Union Budget 2026: The Complete ET Analysis",
+    summary: "Interact with our AI Deep Briefing synthesizing 6 live ET coverage reports on the Finance Minister's ₹45 Lakh Crore budget, tax cuts, and market reactions.",
+    source: "MyET AI Deep Synthesis",
+    publishedAt: new Date().toISOString(),
+    urlToImage: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1000",
+    tags: ["Economy", "Finance", "Stocks", "Deep Dive"],
+    content: combinedBudgetContext
+  },
   {
     id: "tech-1",
     title: "OpenAI Announces Next-Gen Reasoning Models for Enterprise",
