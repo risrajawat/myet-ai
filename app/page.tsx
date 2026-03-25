@@ -67,19 +67,35 @@ export default function Home() {
   // Fetch articles based on personalization
   useEffect(() => {
     async function fetchNews() {
+      if (selectedTopics.length === 0) return;
+      
+      const cacheKey = `myet-feed-${selectedTopics.join('-')}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      
+      if (cached) {
+        setArticles(JSON.parse(cached));
+        setIsLoading(false); // Fix: Remove loading skeleton on cache hit!
+        return;
+      }
+
       setIsLoading(true);
       try {
-        // Use the Personalization Agent Server Action
         const personalizedArticles = await getPersonalizedNews(selectedTopics);
         setArticles(personalizedArticles);
+        if (personalizedArticles.length > 0) {
+          sessionStorage.setItem(cacheKey, JSON.stringify(personalizedArticles));
+        }
       } catch (error) {
         console.error("Failed to fetch news", error);
       } finally {
         setIsLoading(false);
       }
     }
-    fetchNews();
-  }, [selectedTopics]);
+
+    if (!isOnboarding && isMounted) {
+      fetchNews();
+    }
+  }, [selectedTopics, isOnboarding, isMounted]);
 
   const toggleTopic = (id: string) => {
     setSelectedTopics(prev => 
@@ -249,7 +265,7 @@ export default function Home() {
                 <div className="h-48 w-full relative overflow-hidden bg-black">
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10"></div>
                   <img 
-                    src={article.urlToImage} 
+                    src={`https://picsum.photos/seed/${article.id}/800/600`} 
                     alt={article.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-80"
                   />

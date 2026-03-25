@@ -61,7 +61,7 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
     const steps = [
       "Analyzing Article Story Arc...",
       "Generating AI Voiceover Script...",
-      "Synthesizing Visual Assets (HeyGen)...",
+      "Synthesizing Visual Assets...",
       "Rendering Final MP4..."
     ];
     for (const step of steps) {
@@ -69,7 +69,43 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
       await new Promise(r => setTimeout(r, 1500));
     }
     setIsVideoGenerated(true);
+
+    // Play Free Native AI Voiceover!
+    if ('speechSynthesis' in window && videoScript && article) {
+      window.speechSynthesis.cancel();
+      const textToSpeak = `${videoScript.title}. ${videoScript.description}. Here is the full briefing: ${article.summary}`;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      const voices = window.speechSynthesis.getVoices();
+      const englishVoices = voices.filter(v => v.lang.includes("en-US") || v.lang.includes("en-GB"));
+      const bestVoice = englishVoices.find(v => v.name.includes("Samantha") || v.name.includes("Google") || v.name.includes("Daniel")) || englishVoices[0] || voices[0];
+      
+      if (bestVoice) utterance.voice = bestVoice;
+      utterance.rate = 1.0;
+      utterance.volume = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
   };
+
+  const handleStopVideo = () => {
+    setIsPlaying(false);
+    setIsVideoGenerated(false);
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  // Stop audio on unmount and tab switch
+  useEffect(() => {
+    return () => {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'video') {
+      handleStopVideo();
+    }
+  }, [activeTab]);
 
   // Fetch mock article on load
   useEffect(() => {
@@ -445,11 +481,15 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
                       {/* Video Player or Generation State */}
                       {isVideoGenerated ? (
                         <video 
-                          src="https://cdn.pixabay.com/video/2020/05/24/40061-424424754_large.mp4" 
+                          src={
+                            article?.id.includes('budget') || article?.id.includes('economy') || article?.id.includes('finance') ? '/budget.mp4' :
+                            article?.id.includes('tech') || article?.id.includes('ai') ? '/tech.mp4' :
+                            article?.id.includes('startup') ? '/startup.mp4' : '/demo.mp4'
+                          } 
                           autoPlay 
                           loop 
                           muted 
-                          className="absolute inset-0 z-0 w-full h-full object-cover opacity-80 mix-blend-screen" 
+                          className="absolute inset-0 z-0 w-full h-full object-cover opacity-60" 
                         />
                       ) : (
                         <div className={`absolute inset-0 z-0 opacity-50 mix-blend-screen transition-all duration-1000 ease-linear ${isPlaying ? 'scale-110 saturate-150 animate-pulse' : 'scale-105 group-hover:scale-100'}`}>
@@ -508,8 +548,9 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
                               </button>
                             ) : (
                               <button 
-                                 className="flex items-center gap-2 px-6 py-2 bg-green-500 text-white rounded-xl text-sm font-bold transition shadow-[0_0_15px_rgba(34,197,94,0.3)] pointer-events-none">
-                                <PlaySquare size={16} fill="currentColor" /> Playing
+                                 onClick={handleStopVideo}
+                                 className="flex items-center gap-2 px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold transition shadow-[0_0_15px_rgba(239,68,68,0.3)] cursor-pointer">
+                                <Pause size={16} fill="currentColor" /> Stop Video
                               </button>
                             )}
                             <div className="flex gap-4 text-gray-400">
