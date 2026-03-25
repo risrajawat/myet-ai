@@ -76,10 +76,10 @@ We designed the system as modular AI components:
 
 ✅ UI + core flow built
 ✅ AI summary working
+✅ Chat feature
+✅ Timeline generation
 🔜 Next:
-
-* Chat feature
-* Timeline generation
+* Full RAG pipeline
 * Video generation
 
 ---
@@ -93,13 +93,9 @@ We designed the system as modular AI components:
 | AI Integration | Groq API                         |
 | Data Source    | NewsAPI                          |
 | Logic Layer    | Lite RAG (multi-article context) |
-| Hosting        | Vercel (optional)                |
+| Hosting        | Vercel                           |
 
 ---
-
-<!-- ## 🔗 Demo
-
-(Add your demo video / deployed link here) -->
 
 ---
 
@@ -138,8 +134,8 @@ tsconfig.json
 * [x] AI Summary Integration
 * [x] Chat with News
 * [x] Timeline Feature
+* [x] Language Support
 * [ ] Video Generation
-* [ ] Language Support
 * [ ] Full RAG Pipeline (Future)
 
 ---
@@ -158,7 +154,7 @@ tsconfig.json
 ### 1️⃣ Clone Repo
 
 ```bash
-git clone https://github.com/your-username/myet-ai.git
+git clone https://github.com/risrajawat/myet-ai.git
 cd myet-ai
 ```
 
@@ -173,7 +169,6 @@ npm install
 Create `.env.local`:
 
 ```bash
-NEXT_PUBLIC_NEWS_API_KEY=your_key
 GROQ_API_KEY=your_key
 ```
 
