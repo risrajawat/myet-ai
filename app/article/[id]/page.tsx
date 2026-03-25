@@ -53,6 +53,23 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
   
   // Video State
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isVideoGenerated, setIsVideoGenerated] = useState(false);
+  const [videoProgressText, setVideoProgressText] = useState('');
+
+  const handleGenerateVideo = async () => {
+    setIsPlaying(true);
+    const steps = [
+      "Analyzing Article Story Arc...",
+      "Generating AI Voiceover Script...",
+      "Synthesizing Visual Assets (HeyGen)...",
+      "Rendering Final MP4..."
+    ];
+    for (const step of steps) {
+      setVideoProgressText(step);
+      await new Promise(r => setTimeout(r, 1500));
+    }
+    setIsVideoGenerated(true);
+  };
 
   // Fetch mock article on load
   useEffect(() => {
@@ -425,21 +442,30 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
                      </div>
                   ) : videoScript ? (
                     <>
-                      {/* Background placeholder (Simulating AI Video generation) */}
-                      <div className={`absolute inset-0 z-0 opacity-50 mix-blend-screen transition-all duration-[10000ms] ease-linear ${isPlaying ? 'scale-125 saturate-150 animate-pulse' : 'scale-105 group-hover:scale-100'}`}>
-                         <div className="w-full h-full bg-gradient-to-br from-brand-600/40 to-blue-500/20 flex flex-col items-center justify-center text-center p-8">
-                            {isPlaying ? (
-                               <div className="w-16 h-16 rounded-full border-4 border-white/20 border-t-white animate-spin mb-4" />
-                            ) : (
-                               <PlaySquare size={48} className="text-white/50 mb-4" />
-                            )}
-                            <span className="text-xs font-mono text-white/40 uppercase border border-white/10 p-2 rounded max-w-sm backdrop-blur-sm">
-                               {isPlaying ? "[Video Stream Initiated]" : "[Generative Video Prompt]"}
-                               <br/>
-                               {videoScript.videoPrompt}
-                            </span>
-                         </div>
-                      </div>
+                      {/* Video Player or Generation State */}
+                      {isVideoGenerated ? (
+                        <video 
+                          src="https://cdn.pixabay.com/video/2020/05/24/40061-424424754_large.mp4" 
+                          autoPlay 
+                          loop 
+                          muted 
+                          className="absolute inset-0 z-0 w-full h-full object-cover opacity-80 mix-blend-screen" 
+                        />
+                      ) : (
+                        <div className={`absolute inset-0 z-0 opacity-50 mix-blend-screen transition-all duration-1000 ease-linear ${isPlaying ? 'scale-110 saturate-150 animate-pulse' : 'scale-105 group-hover:scale-100'}`}>
+                           <div className="w-full h-full bg-gradient-to-br from-brand-600/40 to-blue-500/20 flex flex-col items-center justify-center text-center p-8">
+                              {isPlaying ? (
+                                 <div className="w-16 h-16 rounded-full border-4 border-white/20 border-t-brand-500 animate-spin mb-4 shadow-[0_0_15px_rgba(255,51,102,0.5)]" />
+                              ) : (
+                                 <PlaySquare size={48} className="text-white/50 mb-4" />
+                              )}
+                              <span className="text-xs font-mono text-white/80 font-bold uppercase border border-brand-500/30 bg-black/50 p-3 rounded-lg max-w-sm backdrop-blur-md transition-all duration-300">
+                                 {isPlaying ? videoProgressText : "[Generative Video Prompt]"}
+                                 {!isPlaying && <><br/><span className="text-white/40 font-normal">{videoScript.videoPrompt}</span></>}
+                              </span>
+                           </div>
+                        </div>
+                      )}
                       
                       {/* UI Overlay Top */}
                       <AnimatePresence>
@@ -460,23 +486,32 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
 
                       {/* UI Controls Bottom */}
                       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 z-10">
-                         <div className="w-full bg-white/20 h-1.5 rounded-full mb-4 overflow-hidden relative">
-                           {isPlaying && (
-                               <motion.div 
-                                 initial={{ width: "0%" }}
-                                 animate={{ width: "100%" }}
-                                 transition={{ duration: 84, ease: "linear" }}
-                                 className="h-full bg-brand-500 rounded-full" 
-                               />
-                           )}
-                           {!isPlaying && <div className="w-1/3 h-full bg-brand-500 rounded-full" />}
-                         </div>
-                         <div className="flex items-center justify-between">
-                            <button 
-                               onClick={() => setIsPlaying(!isPlaying)}
-                               className="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-sm font-bold transition">
-                              {isPlaying ? <><Pause size={16} fill="currentColor" /> Pause Video</> : <><PlaySquare size={16} fill="currentColor" /> Play Article Video</>}
-                            </button>
+                          <div className="w-full bg-white/20 h-1.5 rounded-full mb-4 overflow-hidden relative">
+                            {isPlaying && !isVideoGenerated && (
+                                <motion.div 
+                                  initial={{ width: "0%" }}
+                                  animate={{ width: "100%" }}
+                                  transition={{ duration: 6, ease: "linear" }}
+                                  className="h-full bg-brand-500 rounded-full shadow-[0_0_10px_rgba(255,51,102,0.8)]" 
+                                />
+                            )}
+                            {isVideoGenerated && <div className="w-full h-full bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.8)]" />}
+                            {!isPlaying && <div className="w-0 h-full bg-brand-500 rounded-full" />}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            {!isVideoGenerated ? (
+                              <button 
+                                 onClick={handleGenerateVideo}
+                                 disabled={isPlaying}
+                                 className="flex items-center gap-2 px-6 py-2 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition shadow-[0_0_15px_rgba(255,51,102,0.3)]">
+                                {isPlaying ? <><Loader2 size={16} className="animate-spin" /> Generating AI Video...</> : <><PlaySquare size={16} fill="currentColor" /> Generate Video</>}
+                              </button>
+                            ) : (
+                              <button 
+                                 className="flex items-center gap-2 px-6 py-2 bg-green-500 text-white rounded-xl text-sm font-bold transition shadow-[0_0_15px_rgba(34,197,94,0.3)] pointer-events-none">
+                                <PlaySquare size={16} fill="currentColor" /> Playing
+                              </button>
+                            )}
                             <div className="flex gap-4 text-gray-400">
                                <button className="hover:text-white transition">HD</button>
                                <button className="hover:text-white transition">CC</button>
