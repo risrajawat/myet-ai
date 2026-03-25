@@ -172,6 +172,7 @@ Create `.env.local`:
 
 ```bash
 GROQ_API_KEY=your_key
+GNEWS_API_KEY=your_key
 ```
 
 ### 4️⃣ Run Project

@@ -107,9 +107,26 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
     }
   }, [activeTab]);
 
-  // Fetch mock article on load
+  // Fetch article on load
   useEffect(() => {
-    const found = mockArticles.find(a => a.id === params.id);
+    // 1. Try finding it in the static Golden Mock Data
+    let found = mockArticles.find(a => a.id === params.id);
+    
+    // 2. If it's a Live GNews article, retrieve it from the Session Storage Cache!
+    if (!found) {
+      const cacheKeys = Object.keys(sessionStorage).filter(k => k.startsWith('myet-feed-'));
+      for (const key of cacheKeys) {
+        const cachedStr = sessionStorage.getItem(key);
+        if (cachedStr) {
+          try {
+            const cachedArticles = JSON.parse(cachedStr);
+            found = cachedArticles.find((a: any) => a.id === params.id);
+            if (found) break;
+          } catch(e) {}
+        }
+      }
+    }
+    
     if (found) setArticle(found);
   }, [params.id]);
 
@@ -484,7 +501,7 @@ export default function ArticlePage(props: { params: Promise<{ id: string }> }) 
                           src={
                             article?.id.includes('budget') || article?.id.includes('economy') || article?.id.includes('finance') ? '/budget.mp4' :
                             article?.id.includes('tech') || article?.id.includes('ai') ? '/tech.mp4' :
-                            article?.id.includes('startup') ? '/startup.mp4' : '/demo.mp4'
+                            article?.id.includes('startup') ? '/startup.mp4' : '/budget.mp4'
                           } 
                           autoPlay 
                           loop 

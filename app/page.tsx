@@ -168,7 +168,7 @@ export default function Home() {
           
           {userProfile && (
             <button 
-              onClick={() => { localStorage.clear(); window.location.reload(); }}
+              onClick={() => { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }}
               className="text-xs text-gray-400 hover:text-white transition-colors px-4 py-2 border border-white/10 glass rounded-full hover:bg-white/5 active:scale-95 flex items-center gap-2"
             >
               Logout

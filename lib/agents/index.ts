@@ -11,12 +11,43 @@ const hasGroqKey = !!process.env.GROQ_API_KEY;
 
 // 1. Personalization Agent
 export async function getPersonalizedNews(interests: string[]): Promise<NewsArticle[]> {
-  if (!interests || interests.length === 0) return mockArticles;
+  let baseCatalog = [...mockArticles];
+
+  // Live Free API integration if the user injects a key for the hackathon
+  if (process.env.GNEWS_API_KEY && interests && interests.length > 0) {
+    try {
+      const query = interests.join(' OR ');
+      const res = await fetch(`https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&apikey=${process.env.GNEWS_API_KEY}`, { next: { revalidate: 3600 } });
+      const data = await res.json();
+      
+      if (data.articles && data.articles.length > 0) {
+        baseCatalog = data.articles.map((a: any, i: number) => ({
+          id: `live-${i}-${Date.now()}`,
+          title: a.title,
+          summary: a.description || a.title,
+          source: a.source?.name || 'GNews Live',
+          publishedAt: a.publishedAt,
+          urlToImage: a.image || `https://picsum.photos/seed/live${i}/800/600`,
+          tags: interests, // Infer tags from the search query success
+          content: (a.content || a.description || a.title).replace(/\s*\[\+?\d+\s*chars\]/g, '') + '\n\n[Full external article restricted by GNews Free Tier API]',
+        }));
+        
+        // 🚨 Hackathon Trick: Prepend the massive 500-word 'Union Budget' Mock Article 
+        // to the Live Feed so the Lite-RAG and Story Arc demos still work dynamically on stage!
+        const goldenMock = mockArticles.find(m => m.id === 'budget-1');
+        if (goldenMock) baseCatalog.unshift(goldenMock);
+      }
+    } catch (e) {
+      console.error("GNews Fetch Error, falling back to Mock:", e);
+    }
+  }
+
+  if (!interests || interests.length === 0) return baseCatalog;
 
   if (hasGroqKey) {
     try {
       // Create a lightweight map of available articles to send to the AI
-      const catalog = mockArticles.map(a => ({ id: a.id, title: a.title, summary: a.summary }));
+      const catalog = baseCatalog.map(a => ({ id: a.id, title: a.title, summary: a.summary }));
       
       const { text } = await generateText({
         model: primaryModel,
@@ -24,7 +55,7 @@ export async function getPersonalizedNews(interests: string[]): Promise<NewsArti
         Here is the current news catalog:
         ${JSON.stringify(catalog, null, 2)}
         
-        Analyze the summaries and rank the articles based on semantic relevance to the user's interests. Return ONLY the IDs of the top relevant articles (max 6).
+        Analyze the summaries and rank the articles based on semantic relevance to the user's interests. Return ONLY the IDs of the top relevant articles (max 10).
         Return STRICTLY valid JSON ONLY. Do not use markdown backticks. The JSON must exactly match this structure:
         {
           "ranked_ids": ["id-1", "id-2", "id-3"]
@@ -49,8 +80,10 @@ export async function getPersonalizedNews(interests: string[]): Promise<NewsArti
       }
       
       if (rankedIds.length > 0) {
+        // AI Hallucination Guard: Remove any duplicate IDs returned by the model
+        const uniqueIds = Array.from(new Set(rankedIds));
         // Return articles in the exact order the AI specified
-        const ranked = rankedIds.map(id => mockArticles.find(a => a.id === id)).filter(Boolean) as NewsArticle[];
+        const ranked = uniqueIds.map(id => baseCatalog.find(a => a.id === id)).filter(Boolean) as NewsArticle[];
         if (ranked.length > 0) return ranked;
       }
     } catch (e) {
@@ -60,9 +93,9 @@ export async function getPersonalizedNews(interests: string[]): Promise<NewsArti
 
   // Fallback if no Groq key or AI fail
   await delay(800);
-  return mockArticles.filter(article => 
+  return baseCatalog.filter(article => 
     article.tags.some(tag => interests.map(i => i.toLowerCase()).includes(tag.toLowerCase()))
-  );
+  ).slice(0, 10);
 }
 
 // 2. Summarizer Agent
