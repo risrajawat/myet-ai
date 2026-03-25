@@ -74,13 +74,15 @@ We designed the system as modular AI components:
 
 ## 🔥 Current Status (MVP)
 
-✅ UI + core flow built
-✅ AI summary working
-✅ Chat feature
-✅ Timeline generation
-🔜 Next:
-* Full RAG pipeline
-* Video generation
+✅ UI + core flow built  
+✅ AI summary working  
+✅ Chat feature  
+✅ Timeline generation  
+
+## 🔜 Next
+
+- Full RAG pipeline  
+- Video generation
 
 ---
 
